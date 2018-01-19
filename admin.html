@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html >
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style>
+body{
+  font-family: '微軟正黑體';
+  background-image: url("1345086107-734555151.gif");
+}
+</style>
+  <body>
+
+    <!-- 1. The <iframe> (and video player) will replace this <div> tag. -->
+    <div id="player"></div>
+
+    <script>
+      // 2. This code loads the IFrame Player API code asynchronously.
+      var tag = document.createElement('script');
+
+      tag.src = "https://www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+      // 3. This function creates an <iframe> (and YouTube player)
+      //    after the API code downloads.
+      var player;
+      var videoId;
+      //var plid;
+      var listId,listIndex,listState;
+      var playingList=true;
+      var l= new Array();
+      listId=0;
+
+      vid='M7lc1UVf-VE';
+      function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+          height: '720',
+          width: '1080',
+          //videoId: 'M7lc1UVf-VE',
+          events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange,
+            'onError':nextSong
+          }
+        });
+      }
+      function update()
+      {
+      	document.getElementById('currentPlayingId').innerHTML='current playing video:'+player.getVideoUrl();
+      	document.getElementById('vw').innerHTML='time: '+player.getCurrentTime();
+      }
+      function timelyupdate()
+      {
+      	var t=setInterval("update()",100);
+      }
+      function idchange(vdid)
+      {
+        videoId=vdid;
+        player.loadVideoById(vdid,0);
+      }
+      function openList(newListId)
+      {
+        listId = newListId;
+        if(playingList)
+        {
+          player.loadPlaylist({'list':newListId});
+        }
+        else
+        {
+          listIndex=0;
+          listState=0;
+        }
+        
+      }
+      function moveTo(selectTime)
+      {
+        player.seekTo(selectTime,true);
+      }
+
+      function addVideo(newVideoId)
+      {
+        
+        if(playingList)
+        {
+          playingList=false;
+          listIndex=player.getPlaylistIndex();
+          listState=player.getCurrentTime();
+          player.loadVideoById({'videoId':newVideoId});
+        }
+        else
+        {
+          l.push(newVideoId);
+          document.getElementById('pls').innerHTML='待放影音: '+l;
+        }
+
+
+      }
+      // 4. The API will call this function when the video player is ready.
+      function onPlayerReady(event) {
+        event.target.playVideo();
+        timelyupdate();        
+      }
+
+
+      // 5. The API calls this function when the player's state changes.
+      //    The function indicates that when playing a video (state=1),
+      //    the player should play for six seconds and then stop.
+      var done = false;
+      function onPlayerStateChange(event) {
+         document.getElementById('vw').innerHTML = 'time: '+player.getCurrentTime();
+         if(event.data==0)
+         {
+          nextSong();
+         }
+      }
+      function nextSong()
+      {
+        if(playingList)
+        {
+          if(listId)
+          {
+            player.nextVideo();
+          }
+          else
+          {
+            window.alert('沒有歌了哭哭');
+            player.pauseVideo();
+          }
+          
+        }
+        else
+        {
+          if(l.length==0)
+            {
+              playingList = true;
+              if(listId)
+              {
+                player.loadPlaylist({'list':listId,'index':listIndex,'startSeconds':listState});
+              }
+              else
+                {
+                  window.alert('沒有歌了哭哭');
+                  player.pauseVideo();
+                }
+              
+
+            }
+            else
+            {
+              player.loadVideoById({'videoId':l.shift()});
+              document.getElementById('pls').innerHTML='待放影音: '+l;
+            }
+        }
+      }
+
+      function stopVideo() {
+        player.stopVideo();
+      }
+    </script>
+    <form><input type='text' name='vd' placeholder='直接亂切用的'></input><input type='button' value='點我會壞掉' onclick='idchange(vd.value)'></input></form>
+    <form><input type='text' name='tim' placeholder='time'></input><input type='button' value='修改' onclick='player.seekTo(tim.value,true)'></input></form>
+    <form><input type='text' name='wd' placeholder='width'></input><input type='text' name='hi' placeholder='height'></input><input type='button' value='time' onclick='player.setSize(wd.value,hi.value)'></input></form>
+    <form><input type='text' name='ls' placeholder='listid'></input><input type='button' value='修改' onclick='openList(ls.value)'></input></form>
+    <form><input type='text' name='ad' placeholder='add video'></input><input type='button' value='加入' onclick='addVideo(ad.value)'></input></form>
+    <button onclick='nextSong()'>下一首</button>
+    <p id='currentPlayingId'>playing video id:</p>
+    <p id='vw'>time:</p>
+    <p id='pls'>待放影音:</p>
+  </body>
+</html>

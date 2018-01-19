@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+</head>
+<body>
+	<div id=player></div>
+
+	<script>
+		var tag = document.createElement('script');
+
+	    tag.src = "https://www.youtube.com/iframe_api";
+	    var firstScriptTag = document.getElementsByTagName('script')[0];
+	    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+	    function onYouTubeIframeAPIReady() {
+	      player = new YT.Player('player', {
+	        height: '720',
+	        width: '1080',
+	          videoId: 'M7lc1UVf-VE',
+	          events: {
+	            'onReady': onPlayerReady,
+	            'onError':error
+	          }
+	        });
+	      }
+	    function onPlayerReady()
+	    {
+	    	player.playVideo();
+	    	
+	    	timely();
+	    	
+	    }
+	    function onPlayerStateChange()
+	    {
+	    	//pass;
+	    }
+	    function error()
+	    {
+	    	window.alert("發生錯誤，也許是控制端還未開始播放")
+	    }
+	    function update()
+	    {
+	    	var num;
+	    	$.get("time.txt",function(data,status)
+	    	{
+	    		$("#time").text(String(data));
+	    		num = Number(data);
+	    	})
+	    	$.get("video_url.txt",function(data,status){
+
+	    		//document.getElementsById=('url').innerHTML=data;
+
+	    		var video_id=data.slice(data.search('=')+1,);
+	    		$("#url").text(video_id);
+	    		var currentUrl=player.getVideoUrl();
+	    		if (video_id == currentUrl.slice(currentUrl.search('=')+1,)){
+	    			player.seekto(num);
+	    			
+	    		}
+	    		else{
+	    			player.loadVideoById(video_id,num);
+
+	    		}	    			
+	    	})
+	    }
+	    function timely()
+	    {
+	    	var t = setInterval("update()",2000);
+	    }
+	</script>
+	<form><input type='text' name='wd' placeholder='width'></input><input type='text' name='hi' placeholder='height'></input><input type='button' value='time' onclick='player.setSize(wd.value,hi.value)'></input></form>
+	<p id = 'url'></p>
+	<p id = 'time'></p>
+
+	</body>
+	</html>
