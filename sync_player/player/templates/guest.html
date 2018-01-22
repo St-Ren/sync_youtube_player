@@ -9,7 +9,7 @@
 
 	<script>
 		var tag = document.createElement('script');
-
+		var errored=0;
 	    tag.src = "https://www.youtube.com/iframe_api";
 	    var firstScriptTag = document.getElementsByTagName('script')[0];
 	    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
@@ -17,7 +17,6 @@
 	      player = new YT.Player('player', {
 	        height: '720',
 	        width: '1080',
-	          videoId: 'M7lc1UVf-VE',
 	          events: {
 	            'onReady': onPlayerReady,
 	            'onError':error
@@ -37,30 +36,41 @@
 	    }
 	    function error()
 	    {
-	    	window.alert("發生錯誤，也許是控制端還未開始播放")
+	    	if(!errored)
+	    	{
+	    		window.alert("發生錯誤，也許是控制端還未開始播放");
+	    		errored = 1;
+	    	}
+	    	
 	    }
 	    function update()
 	    {
 	    	var num;
-	    	$.get("time.txt",function(data,status)
+	    	$.get("/get_time/",function(data,status)
 	    	{
 	    		$("#time").text(String(data));
 	    		num = Number(data);
 	    	})
-	    	$.get("video_url.txt",function(data,status){
+	    	$.get("/get_url/",function(data,status){
 
 	    		//document.getElementsById=('url').innerHTML=data;
 
-	    		var video_id=data.slice(data.search('=')+1,);
+	    		var video_id=data.slice(data.search('v=')+2,);
 	    		$("#url").text(video_id);
 	    		var currentUrl=player.getVideoUrl();
-	    		if (video_id == currentUrl.slice(currentUrl.search('=')+1,)){
-	    			player.seekto(num);
-	    			
+	    		if (video_id == currentUrl.slice(currentUrl.search('v=')+2,)){
+	    			if(num - player.getCurrentTime() > 2| player.getCurrentTime() - num >3)
+	    			{
+	    				player.seekTo(num);
+	    				$('#num').text(num-player.getCurrentTime()) ;
+	    			}
+
+	    			errored = 0;
+	    			$('#num').text= num-player.getCurrentTime();
 	    		}
 	    		else{
 	    			player.loadVideoById(video_id,num);
-
+	    			$('#num').text= currentUrl;
 	    		}	    			
 	    	})
 	    }
@@ -72,6 +82,7 @@
 	<form><input type='text' name='wd' placeholder='width'></input><input type='text' name='hi' placeholder='height'></input><input type='button' value='time' onclick='player.setSize(wd.value,hi.value)'></input></form>
 	<p id = 'url'></p>
 	<p id = 'time'></p>
+	<p id = 'num'>123</p>
 
 	</body>
 	</html>

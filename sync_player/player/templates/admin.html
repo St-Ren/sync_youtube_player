@@ -8,11 +8,14 @@ body{
   background-image: url("1345086107-734555151.gif");
 }
 </style>
+<head>
+<title>dj端</title>
+</head>
   <body>
 
     <!-- 1. The <iframe> (and video player) will replace this <div> tag. -->
     <div id="player"></div>
-
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script>
       // 2. This code loads the IFrame Player API code asynchronously.
       var tag = document.createElement('script');
@@ -24,12 +27,12 @@ body{
       // 3. This function creates an <iframe> (and YouTube player)
       //    after the API code downloads.
       var player;
-      var vid;
-      var plid;
-      var lsid,lsex,lsst;
-      var plls=true;
+      var videoId;
+      //var plid;
+      var listId,listIndex,listState;
+      var playingList=true;
       var l= new Array();
-      lsid=0;
+      listId=0;
 
       vid='M7lc1UVf-VE';
       function onYouTubeIframeAPIReady() {
@@ -44,43 +47,59 @@ body{
           }
         });
       }
+      function update()
+      {
+      	video_url= player.getVideoUrl();
+        CurrentTime = player.getCurrentTime();
+        document.getElementById('currentPlayingId').innerHTML='current playing video:'+video_url;
+      	document.getElementById('vw').innerHTML='time: '+CurrentTime;
+        $.get('/set/',{'video_url': video_url,'CurrentTime' : CurrentTime},function(request){
+          $('#send').text = request;
+
+        });
+
+      }
+      function timelyupdate()
+      {
+      	var t=setInterval("update()",1000);
+      }
       function idchange(vdid)
       {
-        vid=vdid;
+        videoId=vdid;
         player.loadVideoById(vdid,0);
       }
-      function opls(lid)
+      function openList(newListId)
       {
-        lsid=lid;
-        if(plls)
+        listId = newListId;
+        if(playingList)
         {
-          player.loadPlaylist({'list':lid});
+          player.loadPlaylist({'list':newListId});
         }
         else
         {
-          lsex=0;
-          lsst=0;
+          listIndex=0;
+          listState=0;
         }
         
       }
-      function optime(tm)
+      function moveTo(selectTime)
       {
-        player.seekTo(tm,true);
+        player.seekTo(selectTime,true);
       }
 
-      function addvd(vdid)
+      function addVideo(newVideoId)
       {
         
-        if(plls)
+        if(playingList)
         {
-          plls=false;
-          lsex=player.getPlaylistIndex();
-          lsst=player.getCurrentTime();
-          player.loadVideoById({'videoId':vdid});
+          playingList=false;
+          listIndex=player.getPlaylistIndex();
+          listState=player.getCurrentTime();
+          player.loadVideoById({'videoId':newVideoId});
         }
         else
         {
-          l.push(vdid);
+          l.push(newVideoId);
           document.getElementById('pls').innerHTML='待放影音: '+l;
         }
 
@@ -89,7 +108,9 @@ body{
       // 4. The API will call this function when the video player is ready.
       function onPlayerReady(event) {
         event.target.playVideo();
+        timelyupdate();        
       }
+
 
       // 5. The API calls this function when the player's state changes.
       //    The function indicates that when playing a video (state=1),
@@ -104,9 +125,9 @@ body{
       }
       function nextSong()
       {
-        if(plls)
+        if(playingList)
         {
-          if(lsid)
+          if(listId)
           {
             player.nextVideo();
           }
@@ -121,10 +142,10 @@ body{
         {
           if(l.length==0)
             {
-              plls=true;
-              if(lsid)
+              playingList = true;
+              if(listId)
               {
-                player.loadPlaylist({'list':lsid,'index':lsex,'startSeconds':lsst});
+                player.loadPlaylist({'list':listId,'index':listIndex,'startSeconds':listState});
               }
               else
                 {
@@ -149,10 +170,12 @@ body{
     <form><input type='text' name='vd' placeholder='直接亂切用的'></input><input type='button' value='點我會壞掉' onclick='idchange(vd.value)'></input></form>
     <form><input type='text' name='tim' placeholder='time'></input><input type='button' value='修改' onclick='player.seekTo(tim.value,true)'></input></form>
     <form><input type='text' name='wd' placeholder='width'></input><input type='text' name='hi' placeholder='height'></input><input type='button' value='time' onclick='player.setSize(wd.value,hi.value)'></input></form>
-    <form><input type='text' name='ls' placeholder='listid'></input><input type='button' value='修改' onclick='opls(ls.value)'></input></form>
-    <form><input type='text' name='ad' placeholder='add video'></input><input type='button' value='加入' onclick='addvd(ad.value)'></input></form>
+    <form><input type='text' name='ls' placeholder='listid'></input><input type='button' value='修改' onclick='openList(ls.value)'></input></form>
+    <form><input type='text' name='ad' placeholder='add video'></input><input type='button' value='加入' onclick='addVideo(ad.value)'></input></form>
     <button onclick='nextSong()'>下一首</button>
+    <p id='currentPlayingId'>playing video id:</p>
     <p id='vw'>time:</p>
     <p id='pls'>待放影音:</p>
+    <p id = 'send'></p>
   </body>
 </html>
